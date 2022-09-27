@@ -5,6 +5,7 @@ import pickle
 import numpy as np
 import tensorflow as tf
 import util
+from sklearn.model_selection import train_test_split
 
 os.environ['KMP_DUPLICATE_LIB_OK'] = 'True'
 
@@ -30,22 +31,14 @@ def train():
         shear_range=0.2,
         zoom_range=0.2,
         horizontal_flip=True)
+
+    t_data, t_labels = util.load_train_data()
+    v_data, v_labels = util.load_test_data()
+    t_data, v_data = t_data.reshape(50000, 32, 32, 3), v_data.reshape(10000, 32, 32, 3)
     # Create a train generator
-    train_generator = train_data_generator.flow_from_directory(
-        'C:\\Users\\vladm\\Desktop\\task_firends\\CIFAR-10-images-master\\train',
-        target_size=(img_width, img_height),
-        batch_size=batch_size,
-        color_mode='rgb',
-        shuffle=True,
-        class_mode='categorical')
+    train_generator = train_data_generator.flow(t_data, t_labels, batch_size=32)
     # Create a test generator
-    validation_generator = validation_data_generator.flow_from_directory(
-        'C:\\Users\\vladm\\Desktop\\task_firends\\CIFAR-10-images-master\\test',
-        target_size=(img_width, img_height),
-        batch_size=batch_size,
-        color_mode='rgb',
-        shuffle=True,
-        class_mode='categorical')
+    validation_generator = validation_data_generator.flow(v_data, v_labels, batch_size=32)
     # Start training, fit the model
     model_img.fit(
         train_generator,
@@ -57,15 +50,15 @@ def train():
     model_img.save('C:\\Users\\vladm\\Desktop\\task_firends\\models\\resnet_50.h5')
     print('Saved model to disk!')
     # Get labels
-    labels = train_generator.class_indices
-    # Invert labels
-    classes = {}
-    for key, value in labels.items():
-        classes[value] = key.capitalize()
-    # Save classes to file
-    with open('C:\\Users\\vladm\\Desktop\\task_firends\\CIFAR-10-images-master\\classes.pkl', 'wb') as file:
-        pickle.dump(classes, file)
-    print('Saved classes to disk!')
+    # labels = train_generator.class_indices
+    # # Invert labels
+    # classes = {}
+    # for key, value in labels.items():
+    #     classes[value] = key.capitalize()
+    # # Save classes to file
+    # with open('C:\\Users\\vladm\\Desktop\\task_firends\\CIFAR-10-images-master\\classes.pkl', 'wb') as file:
+    #     pickle.dump(classes, file)
+    # print('Saved classes to disk!')
 
 
 # The main entry point for this module

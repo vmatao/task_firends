@@ -19,4 +19,8 @@ def load_train_data():
 
 
 def load_test_data():
-    return unpickle(data_file+'/test/test_batch')
+    data, labels = [], []
+    dict_file = unpickle(data_file + '/test/test_batch')
+    labels.extend(dict_file[b'labels'])
+    data.extend(dict_file[b'data'])
+    return np.array(data), np.array(labels)
