@@ -11,7 +11,7 @@ os.environ['KMP_DUPLICATE_LIB_OK'] = 'True'
 
 def train():
     # Variables, 25 epochs so far
-    epochs = 5
+    epochs = 1
     batch_size = 32
     train_samples = 10 * 5000  # 10 categories with 5000 images in each category
     validation_samples = 10 * 1000  # 10 categories with 1000 images in each category

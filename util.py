@@ -1,4 +1,5 @@
 import pickle
+import numpy as np
 
 data_file = 'cifar-10-batches-py/'
 
@@ -9,10 +10,12 @@ def unpickle(file):
 
 
 def load_train_data():
-    data_list = []
+    data, labels = [], []
     for i in range(1, 6):
-        data_list.append(unpickle(data_file+'/train/data_batch_' + str(i)))
-    return data_list
+        dict_file = unpickle(data_file+'/train/data_batch_' + str(i))
+        labels.extend(dict_file[b'labels'])
+        data.extend(dict_file[b'data'])
+    return np.array(data), np.array(labels)
 
 
 def load_test_data():

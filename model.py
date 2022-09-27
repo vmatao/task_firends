@@ -12,19 +12,26 @@ os.environ['KMP_DUPLICATE_LIB_OK'] = 'True'
 # Get a ResNet50 model
 def resnet50_model(classes=1000, *args, **kwargs):
     # Load a model if we have saved one
-    if (os.path.isfile('C:\\Users\\vladm\\Desktop\\task_firends\\models\\resnet_50.h5') == True):
-        return keras.models.load_model('C:\\Users\\vladm\\Desktop\\task_firends\\models\\resnet_50.h5')
+    if (os.path.isfile('/models/resnet_50.h5') == True):
+        return keras.models.load_model('/models/resnet_50.h5')
     # Create an input layer
     input = keras.layers.Input(shape=(None, None, 3))
+    print(input)
     # Create output layers
     output = keras.layers.ZeroPadding2D(padding=3, name='padding_conv1')(input)
-    output = keras.layers.Conv2D(64, (7, 7), strides=(2, 2), use_bias=False, name='conv1')(output)
-    output = keras.layers.BatchNormalization(axis=3, epsilon=1e-5, name='bn_conv1')(output)
-    output = keras.layers.Activation('relu', name='conv1_relu')(output)
-    output = keras.layers.MaxPooling2D((3, 3), strides=(2, 2), padding='same', name='pool1')(output)
-    output = conv_block(output, 3, [64, 64, 256], stage=2, block='a', strides=(1, 1))
-    output = identity_block(output, 3, [64, 64, 256], stage=2, block='b')
-    output = identity_block(output, 3, [64, 64, 256], stage=2, block='c')
+    print(output)
+    # stem
+    output = stem(output, 3, [32, 32, 64])
+    # output = keras.layers.Conv2D(64, (7, 7), strides=(2, 2), use_bias=False, name='conv1')(output)
+    # output = keras.layers.BatchNormalization(axis=3, epsilon=1e-5, name='bn_conv1')(output)
+    # output = keras.layers.Activation('relu', name='conv1_relu')(output)
+    # output = keras.layers.MaxPooling2D((3, 3), strides=(2, 2), padding='same', name='pool1')(output)
+    # Stage1-Block1
+    output = conv_block(output, 3, [64, 64, 256], strides=(1, 1))
+    # Stage1-Block2
+    output = identity_block(output, 3, [64, 64, 256])
+    output = identity_block(output, 3, [64, 64, 256])
+    # FC-Block
     output = keras.layers.GlobalAveragePooling2D(name='pool5')(output)
     output = keras.layers.Dense(classes, activation='softmax', name='fc1000')(output)
     # Create a model from input layer and output layers
@@ -40,51 +47,47 @@ def resnet50_model(classes=1000, *args, **kwargs):
     return model
 
 
-# Create an identity block
-def identity_block(input, kernel_size, filters, stage, block):
+def stem(input, kernel_size, filters, strides=(2, 2)):
     # Variables
     filters1, filters2, filters3 = filters
-    conv_name_base = 'res' + str(stage) + block + '_branch'
-    bn_name_base = 'bn' + str(stage) + block + '_branch'
-    # Create layers
-    output = keras.layers.Conv2D(filters1, (1, 1), kernel_initializer='he_normal', name=conv_name_base + '2a')(input)
-    output = keras.layers.BatchNormalization(axis=3, name=bn_name_base + '2a')(output)
+    output = keras.layers.Conv2D(filters1, kernel_size, strides=strides, kernel_initializer='he_normal')(input)
+    output = keras.layers.Conv2D(filters2, kernel_size, kernel_initializer='he_normal')(output)
+    output = keras.layers.Conv2D(filters3, kernel_size, kernel_initializer='he_normal')(output)
+    output = keras.layers.MaxPooling2D((3, 3), strides=(2, 2), padding='same')(output)
+    return output
+
+
+# Create an identity block
+def identity_block(input, kernel_size, filters):
+    filters1, filters2, filters3 = filters
+    output = keras.layers.Conv2D(filters1, (1, 1), kernel_initializer='he_normal')(input)
+    output = keras.layers.BatchNormalization(axis=3)(output)
     output = keras.layers.Activation('relu')(output)
-    output = keras.layers.Conv2D(filters2, kernel_size, padding='same', kernel_initializer='he_normal',
-                                 name=conv_name_base + '2b')(output)
-    output = keras.layers.BatchNormalization(axis=3, name=bn_name_base + '2b')(output)
+    output = keras.layers.Conv2D(filters2, kernel_size, padding='same', kernel_initializer='he_normal')(output)
+    output = keras.layers.BatchNormalization(axis=3)(output)
     output = keras.layers.Activation('relu')(output)
-    output = keras.layers.Conv2D(filters3, (1, 1), kernel_initializer='he_normal', name=conv_name_base + '2c')(output)
-    output = keras.layers.BatchNormalization(axis=3, name=bn_name_base + '2c')(output)
+    output = keras.layers.Conv2D(filters3, (1, 1), kernel_initializer='he_normal')(output)
+    output = keras.layers.BatchNormalization(axis=3)(output)
     output = keras.layers.add([output, input])
     output = keras.layers.Activation('relu')(output)
-    # Return a block
     return output
 
 
 # Create a convolution block
-def conv_block(input, kernel_size, filters, stage, block, strides=(2, 2)):
-    # Variables
+def conv_block(input, kernel_size, filters, strides=(2, 2)):
     filters1, filters2, filters3 = filters
-    conv_name_base = 'res' + str(stage) + block + '_branch'
-    bn_name_base = 'bn' + str(stage) + block + '_branch'
-    # Create block layers
-    output = keras.layers.Conv2D(filters1, (1, 1), strides=strides, kernel_initializer='he_normal',
-                                 name=conv_name_base + '2a')(input)
-    output = keras.layers.BatchNormalization(axis=3, name=bn_name_base + '2a')(output)
+    output = keras.layers.Conv2D(filters1, (1, 1), strides=strides, kernel_initializer='he_normal')(input)
+    output = keras.layers.BatchNormalization(axis=3)(output)
     output = keras.layers.Activation('relu')(output)
-    output = keras.layers.Conv2D(filters2, kernel_size, padding='same', kernel_initializer='he_normal',
-                                 name=conv_name_base + '2b')(output)
-    output = keras.layers.BatchNormalization(axis=3, name=bn_name_base + '2b')(output)
+    output = keras.layers.Conv2D(filters2, kernel_size, padding='same', kernel_initializer='he_normal')(output)
+    output = keras.layers.BatchNormalization(axis=3)(output)
     output = keras.layers.Activation('relu')(output)
-    output = keras.layers.Conv2D(filters3, (1, 1), kernel_initializer='he_normal', name=conv_name_base + '2c')(output)
-    output = keras.layers.BatchNormalization(axis=3, name=bn_name_base + '2c')(output)
-    shortcut = keras.layers.Conv2D(filters3, (1, 1), strides=strides, kernel_initializer='he_normal',
-                                   name=conv_name_base + '1')(input)
-    shortcut = keras.layers.BatchNormalization(axis=3, name=bn_name_base + '1')(shortcut)
+    output = keras.layers.Conv2D(filters3, (1, 1), kernel_initializer='he_normal')(output)
+    output = keras.layers.BatchNormalization(axis=3)(output)
+    shortcut = keras.layers.Conv2D(filters3, (1, 1), strides=strides, kernel_initializer='he_normal')(input)
+    shortcut = keras.layers.BatchNormalization(axis=3)(shortcut)
     output = keras.layers.add([output, shortcut])
     output = keras.layers.Activation('relu')(output)
-    # Return a block
     return output
 
 
@@ -95,11 +98,10 @@ def predict(self, input_array: np.ndarray) -> np.ndarray:
         input = np.array(row).reshape((1, 32, 32, 3)).astype('float32') / 255
         predictions.append(np.argmax(self.predict(input).ravel()))
     return np.array(predictions)
-#
-# def predict_img(self,input_array: np.ndarray)-> np.ndarray:
-#     predictions = []
+
 
 # Given a batch of examples return a batch of certainty levels.
+# predict gives vector of probabilities and display the max probability
 def certainty(self, input_array: np.ndarray) -> np.ndarray:
     certainties = []
     for row in input_array:

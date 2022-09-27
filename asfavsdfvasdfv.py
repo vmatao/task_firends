@@ -11,8 +11,8 @@ os.environ['KMP_DUPLICATE_LIB_OK']='True'
 # Get a ResNet50 model
 def resnet50_model(classes=1000, *args, **kwargs):
     # Load a model if we have saved one
-    if (os.path.isfile('C:\\Users\\vladm\\Desktop\\task_firends\\models\\resnet_50.h5') == True):
-        return keras.models.load_model('C:\\Users\\vladm\\Desktop\\task_firends\\models\\resnet_50.h5')
+    if (os.path.isfile('models/resnet_50.h5') == True):
+        return keras.models.load_model('models/resnet_50.h5')
     # Create an input layer
     input = keras.layers.Input(shape=(None, None, 3))
     # Create output layers

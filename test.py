@@ -9,7 +9,7 @@ import cv2
 # Evaluate the model
 def evaluate():
     # Load the model
-    model = keras.models.load_model('C:\\Users\\vladm\\Desktop\\task_firends\\models\\resnet_50.h5')
+    model = keras.models.load_model('models/resnet_50.h5')
     # Load classes
     classes = {}
     with open('C:\\Users\\vladm\\Desktop\\task_firends\\CIFAR-10-images-master\\classes.pkl', 'rb') as file:
@@ -17,38 +17,38 @@ def evaluate():
     # Get a list of categories
     categories = os.listdir('C:\\Users\\vladm\\Desktop\\task_firends\\CIFAR-10-images-master\\test')
     # Get a category a random
-    category = random.choice(categories)
-    # Print the category
-    print(category)
-    # Get images in a category
-    images = os.listdir('C:\\Users\\vladm\\Desktop\\task_firends\\CIFAR-10-images-master\\test\\' + category)
-    # Randomize images to get different images each time
-    random.shuffle(images)
-    # Loop images
-    blocks = []
     sum_corr = 0
     total = 0
     result = 0
-    for i, name in enumerate(images):
-        # Limit the evaluation
-        if i > 500:
-            break
-        # Print the name
-        print(name)
-        # Get the image
-        image = cv2.imread('C:\\Users\\vladm\\Desktop\\task_firends\\CIFAR-10-images-master\\test\\' + category + '\\' + name)
-        # Get input reshaped and rescaled
-        input = np.array(image).reshape((1, 32, 32, 3)).astype('float32') / 255
-        # Get predictions
-        predictions = model.predict(input).ravel()
-        # Print predictions
-        print(predictions)
-        # Get the class with the highest probability
-        prediction = np.argmax(predictions)
-        # Check if the prediction is correct
-        sum_corr += 1 if classes[prediction].lower() == category else 0
-        total += 1
-        # if total != 0:
+    for category in categories:
+        # Print the category
+        print(category)
+        # Get images in a category
+        images = os.listdir('C:\\Users\\vladm\\Desktop\\task_firends\\CIFAR-10-images-master\\test\\' + category)
+        # Randomize images to get different images each time
+        random.shuffle(images)
+        # Loop images
+        blocks = []
+        for i, name in enumerate(images):
+            # Limit the evaluation
+            if i > 100:
+                break
+            # Print the name
+            print(name)
+            # Get the image
+            image = cv2.imread('C:\\Users\\vladm\\Desktop\\task_firends\\CIFAR-10-images-master\\test\\' + category + '\\' + name)
+            # Get input reshaped and rescaled
+            input = np.array(image).reshape((1, 32, 32, 3)).astype('float32') / 255
+            # Get predictions
+            predictions = model.predict(input).ravel()
+            # Print predictions
+            print(predictions)
+            # Get the class with the highest probability
+            prediction = np.argmax(predictions)
+            # Check if the prediction is correct
+            sum_corr += 1 if classes[prediction].lower() == category else 0
+            total += 1
+            # if total != 0:
     result = 100 * sum_corr / total
     print(result)
 

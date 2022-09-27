@@ -10,20 +10,20 @@ import model
 
 def evaluate():
     # Load the model
-    model_img = keras.models.load_model('C:\\Users\\vladm\\Desktop\\task_firends\\models\\resnet_50.h5')
+    model_img = keras.models.load_model('models/resnet_50.h5')
     test_data = util.load_test_data()
-    test_labels = test_data[b'labels']
-    test_data = test_data[b'data']
+    test_labels = test_data[b'labels'][0:1000]
+    test_data = test_data[b'data'][0:1000]
 
     predictions = model.predict(model_img, test_data)
 
-    # certainties = model.certainty(model_img, test_data)
+    certainties = model.certainty(model_img, test_data)
 
     accuracy = model.accuracy(predictions,test_labels)
 
     print(test_labels)
     print(predictions)
-    # print(certainties)
+    print(certainties)
     print(accuracy)
 
 
