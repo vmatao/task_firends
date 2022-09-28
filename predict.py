@@ -1,9 +1,4 @@
-import os
 import keras
-import random
-import pickle
-import numpy as np
-import cv2
 import util
 import model
 
@@ -13,11 +8,15 @@ def evaluate():
     model_img = keras.models.load_model('models/resnet_50.h5')
     test_data, test_labels = util.load_test_data()
 
-    predictions = model.predict(model_img, test_data[0:1000])
+    predictions, certainties, accuracy = model.all_in_one(model_img, test_data, test_labels)
 
-    certainties = model.certainty(model_img, test_data[0:1000])
-
-    accuracy = model.accuracy(predictions,test_labels[0:1000])
+    # predictions = model.predict(model_img, test_data)
+    #
+    # certainties = model.certainty(model_img, test_data)
+    #
+    # accuracy = model.accuracy(predictions, test_labels)
+    #
+    # model.create_historigram(certainties, predictions, test_labels)
 
     print(test_labels)
     print(predictions)
