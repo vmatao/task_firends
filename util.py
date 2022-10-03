@@ -1,6 +1,7 @@
 import pickle
 import numpy as np
 import pandas as pd
+from matplotlib import pyplot as plt
 
 data_file = 'cifar-10-batches-py/'
 
