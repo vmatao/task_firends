@@ -1,14 +1,15 @@
 import keras
 import util
-import model
+from keras.datasets import cifar10
 
 
 def evaluate():
     # Load the model
-    model_img = keras.models.load_model('models/resnet_50.h5')
-    test_data, test_labels = util.load_test_data()
+    model_img = keras.models.load_model('project_model.h5')
+    (X_train, y_train), (X_test, y_test) = cifar10.load_data()
 
-    predictions, certainties, accuracy = model.all_in_one(model_img, test_data, test_labels)
+    predictions, certainties, accuracy = util.all_in_one(model_img, X_test, y_test)
+    # predictions, certainties, accuracy = sf_task.all_in_one(model_img, test_data[0:5], test_labels[0:5])
 
     # predictions = model.predict(model_img, test_data)
     #
@@ -18,7 +19,7 @@ def evaluate():
     #
     # model.create_historigram(certainties, predictions, test_labels)
 
-    print(test_labels)
+    print(y_test)
     print(predictions)
     print(certainties)
     print(accuracy)
