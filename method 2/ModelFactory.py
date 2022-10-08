@@ -6,26 +6,28 @@ import numpy as np
 import tensorflow as tf
 from matplotlib import pyplot as plt
 from tensorflow import keras
+from keras.datasets import cifar10
 
 os.environ['KMP_DUPLICATE_LIB_OK'] = 'True'
 
 
-class Model:
+class ModelFactory:
 
-    def __init__(self, num_classes=10, activation = 'relu', padding = 'same', dropout = 0.2,
-                 momentum = 0.9, nesterov = False, shape=(32, 32, 3), pool_size = (2, 2), lrate = 0.01, kernel_size = (3, 3)):
-        super(Model, self).__init__()
+    def __init__(self, num_classes=10, epochs=10, batch_size=32):
+        super(ModelFactory, self).__init__()
 
         self.num_classes = num_classes
-        self.inputs = keras.Input(shape=shape)
-        self.kernel_size = kernel_size
-        self.activation = activation
-        self.padding = padding
-        self.dropout = dropout
-        self.momentum = momentum
-        self.nesterov = nesterov
-        self.pool_size = pool_size
-        self.lrate = lrate
+        self.epochs = epochs
+        self.batch_size = batch_size
+        self.inputs = keras.Input(shape=(32, 32, 3))
+        self.kernel_size = (3, 3)
+        self.activation = 'relu'
+        self.padding = 'same'
+        self.dropout = 0.2
+        self.momentum = 0.9
+        self.nesterov = False
+        self.pool_size = (2, 2)
+        self.lrate = 0.01
         self.decay = self.lrate / 100
 
     def make_stem(self, filters=[32, 32, 64], shape=(32, 32, 3)):
@@ -40,7 +42,8 @@ class Model:
         return stem
 
     def make_skip_connection(self, input, filter=64):
-        skip = keras.layers.Conv2D(filter, self.kernel_size, activation=self.activation, padding=self.padding)(input)
+        skip = keras.layers.Conv2D(filter, self.kernel_size, activation=self.activation, padding=self.padding)(
+            input)
         layer = keras.layers.Dropout(self.dropout)(skip)
         layer = keras.layers.Conv2D(filter, self.kernel_size, padding=self.padding)(layer)
         merge = keras.layers.add([layer, skip])
@@ -48,9 +51,11 @@ class Model:
         return activation
 
     def make_main_block(self, input, filter):
-        block = keras.layers.Conv2D(filter, self.kernel_size, activation=self.activation, padding=self.padding)(input)
+        block = keras.layers.Conv2D(filter, self.kernel_size, activation=self.activation, padding=self.padding)(
+            input)
         block = keras.layers.Dropout(self.dropout)(block)
-        block = keras.layers.Conv2D(filter, self.kernel_size, activation=self.activation, padding=self.padding)(block)
+        block = keras.layers.Conv2D(filter, self.kernel_size, activation=self.activation, padding=self.padding)(
+            block)
         block = keras.layers.MaxPooling2D(pool_size=self.pool_size)(block)
         return block
 
@@ -88,25 +93,27 @@ class Model:
                       optimizer=optimizer,
                       metrics=['accuracy'])
 
-    def build_model(self):
+    def train(self, model):
+        # load data
+        (X_train, y_train), (X_test, y_test) = cifar10.load_data()
+        X_train = X_train.astype('float32')
+        X_test = X_test.astype('float32')
+        # normalize inputs from 0-255 to 0.0-1.0
+        X_train = X_train / 255.0
+        X_test = X_test / 255.0
+
+        # one hot encode outputs
+        y_train = np_utils.to_categorical(y_train)
+        y_test = np_utils.to_categorical(y_test)
+        num_classes = y_test.shape[1]
+
+        model.fit(X_train, y_train, validation_data=(X_test, y_test), epochs=self.epochs, batch_size=self.batch_size)
+        # model.save('proper_model_.h5')
+        # print('Saved model to disk!')
+
+    def create_and_train(self):
         model = self.make_model()
         print(model.summary())
         self.compile_model(model)
+        self.train(model)
         return model
-
-    def predict(self, model, input_array: np.ndarray) -> np.ndarray:
-        predictions = []
-        for row in input_array:
-            input = np.array(row).reshape((1, 32, 32, 3)).astype('float32') / 255
-            predictions.append(np.argmax(model.predict(input).ravel()))
-        return np.array(predictions)
-
-    # Given a batch of examples return a batch of certainty levels.
-    # predict gives vector of probabilities and display the max probability
-    def certainty(self, model, input_array: np.ndarray) -> np.ndarray:
-        certainties = []
-        for row in input_array:
-            input = np.array(row).reshape((1, 32, 32, 3)).astype('float32') / 255
-            prediction = model.predict(input).ravel()
-            certainties.append(np.max(prediction))
-        return np.array(certainties)
